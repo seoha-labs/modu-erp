@@ -1,0 +1,129 @@
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  namespace: modu-erp
+
+keycloak:
+  issuerUri: ""
+
+database:
+  host: ""
+  port: 5432
+  username: ""
+  password: ""
+
+erp-gateway:
+  image:
+    repository: seohalabs/erp-gateway
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8080
+  env:
+    KEYCLOAK_ISSUER_URI: ""
+    HR_SERVICE_URL: "http://erp-hr:8081"
+    VACATION_SERVICE_URL: "http://erp-vacation:8082"
+    DB_MANAGER_SERVICE_URL: "http://erp-db-manager:8083"
+    KERBEROS_SERVICE_URL: "http://erp-kerberos:8084"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  hpa:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+
+erp-hr:
+  image:
+    repository: seohalabs/erp-hr
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8081
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  hpa:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+
+erp-vacation:
+  image:
+    repository: seohalabs/erp-vacation
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8082
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  hpa:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+
+erp-db-manager:
+  image:
+    repository: seohalabs/erp-db-manager
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8083
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  hpa:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+
+erp-kerberos:
+  image:
+    repository: seohalabs/erp-kerberos
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8084
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  hpa:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70

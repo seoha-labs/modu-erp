@@ -1,0 +1,164 @@
+version: '3.8'
+
+# =============================================
+# Local infrastructure only.
+# Application services are run locally via:
+#   ./gradlew :erp-{module}:bootRun
+#
+# To run full stack with containers, uncomment
+# the application service definitions below.
+# =============================================
+
+services:
+
+  # --------------- Infrastructure ---------------
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: modu-erp-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - modu-erp
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: modu-erp-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
+    command: start-dev
+    ports:
+      - "8180:8080"
+    networks:
+      - modu-erp
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: modu-erp-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - modu-erp
+
+  # --------------- Application (optional) ---------------
+
+  # erp-gateway:
+  #   build:
+  #     context: ..
+  #     dockerfile: erp-gateway/Dockerfile
+  #   container_name: modu-erp-gateway
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/modu-erp
+  #     HR_SERVICE_URL: http://erp-hr:8081
+  #     VACATION_SERVICE_URL: http://erp-vacation:8082
+  #     DB_MANAGER_SERVICE_URL: http://erp-db-manager:8083
+  #     KERBEROS_SERVICE_URL: http://erp-kerberos:8084
+  #   networks:
+  #     - modu-erp
+  #   depends_on:
+  #     - keycloak
+
+  # erp-hr:
+  #   build:
+  #     context: ..
+  #     dockerfile: erp-hr/Dockerfile
+  #   container_name: modu-erp-hr
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     DB_HOST: postgres
+  #     DB_USERNAME: postgres
+  #     DB_PASSWORD: postgres
+  #     KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/modu-erp
+  #   networks:
+  #     - modu-erp
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+  # erp-vacation:
+  #   build:
+  #     context: ..
+  #     dockerfile: erp-vacation/Dockerfile
+  #   container_name: modu-erp-vacation
+  #   ports:
+  #     - "8082:8082"
+  #   environment:
+  #     DB_HOST: postgres
+  #     DB_USERNAME: postgres
+  #     DB_PASSWORD: postgres
+  #     KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/modu-erp
+  #     HR_SERVICE_URL: http://erp-hr:8081
+  #   networks:
+  #     - modu-erp
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+  # erp-db-manager:
+  #   build:
+  #     context: ..
+  #     dockerfile: erp-db-manager/Dockerfile
+  #   container_name: modu-erp-db-manager
+  #   ports:
+  #     - "8083:8083"
+  #   environment:
+  #     DB_HOST: postgres
+  #     DB_USERNAME: postgres
+  #     DB_PASSWORD: postgres
+  #     KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/modu-erp
+  #   networks:
+  #     - modu-erp
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+  # erp-kerberos:
+  #   build:
+  #     context: ..
+  #     dockerfile: erp-kerberos/Dockerfile
+  #   container_name: modu-erp-kerberos
+  #   ports:
+  #     - "8084:8084"
+  #   environment:
+  #     DB_HOST: postgres
+  #     DB_USERNAME: postgres
+  #     DB_PASSWORD: postgres
+  #     KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/modu-erp
+  #   networks:
+  #     - modu-erp
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+networks:
+  modu-erp:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  # redis-data:

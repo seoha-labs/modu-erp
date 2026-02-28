@@ -1,0 +1,29 @@
+{{- $svc := index .Values "erp-kerberos" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: erp-kerberos
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "modu-erp.labels" . | nindent 4 }}
+    app.kubernetes.io/name: erp-kerberos
+spec:
+  replicas: {{ $svc.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: erp-kerberos
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: erp-kerberos
+    spec:
+      containers:
+        - name: erp-kerberos
+          image: "{{ $svc.image.repository }}:{{ $svc.image.tag }}"
+          imagePullPolicy: {{ $svc.image.pullPolicy }}
+          ports:
+            - containerPort: {{ $svc.service.port }}
+          env:
+            {{- include "modu-erp.commonEnv" . | nindent 12 }}
+          resources:
+            {{- toYaml $svc.resources | nindent 12 }}

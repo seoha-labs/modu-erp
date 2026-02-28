@@ -1,0 +1,34 @@
+global:
+  namespace: modu-erp-staging
+
+keycloak:
+  issuerUri: "https://keycloak.staging.example.com/realms/modu-erp"
+
+database:
+  host: "postgres.staging.example.com"
+  port: 5432
+  username: "erp_user"
+  # password: set via --set or external secret
+
+erp-gateway:
+  replicaCount: 1
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+
+erp-hr:
+  replicaCount: 1
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+
+erp-vacation:
+  replicaCount: 1
+
+erp-db-manager:
+  replicaCount: 1
+
+erp-kerberos:
+  replicaCount: 1

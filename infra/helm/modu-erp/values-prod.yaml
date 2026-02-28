@@ -1,0 +1,62 @@
+global:
+  namespace: modu-erp
+
+keycloak:
+  issuerUri: "https://keycloak.example.com/realms/modu-erp"
+
+database:
+  host: "postgres.example.com"
+  port: 5432
+  username: "erp_user"
+  # password: set via --set or external secret
+
+erp-gateway:
+  image:
+    pullPolicy: Always
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+
+erp-hr:
+  image:
+    pullPolicy: Always
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+
+erp-vacation:
+  image:
+    pullPolicy: Always
+  replicaCount: 2
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+
+erp-db-manager:
+  image:
+    pullPolicy: Always
+  replicaCount: 1
+
+erp-kerberos:
+  image:
+    pullPolicy: Always
+  replicaCount: 1

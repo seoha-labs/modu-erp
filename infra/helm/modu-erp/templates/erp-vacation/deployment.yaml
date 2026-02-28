@@ -1,0 +1,29 @@
+{{- $svc := index .Values "erp-vacation" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: erp-vacation
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "modu-erp.labels" . | nindent 4 }}
+    app.kubernetes.io/name: erp-vacation
+spec:
+  replicas: {{ $svc.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: erp-vacation
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: erp-vacation
+    spec:
+      containers:
+        - name: erp-vacation
+          image: "{{ $svc.image.repository }}:{{ $svc.image.tag }}"
+          imagePullPolicy: {{ $svc.image.pullPolicy }}
+          ports:
+            - containerPort: {{ $svc.service.port }}
+          env:
+            {{- include "modu-erp.commonEnv" . | nindent 12 }}
+          resources:
+            {{- toYaml $svc.resources | nindent 12 }}

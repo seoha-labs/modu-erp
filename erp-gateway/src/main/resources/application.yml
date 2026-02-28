@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: erp-gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/modu-erp}
+  cloud:
+    gateway:
+      routes:
+        - id: erp-hr
+          uri: ${HR_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/hr/**
+        - id: erp-vacation
+          uri: ${VACATION_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/vacation/**
+        - id: erp-db-manager
+          uri: ${DB_MANAGER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/db-manager/**
+        - id: erp-kerberos
+          uri: ${KERBEROS_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/kerberos/**
+
+server:
+  port: 8080

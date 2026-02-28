@@ -1,0 +1,8 @@
+rootProject.name = 'modu-erp'
+
+include 'erp-common'
+include 'erp-gateway'
+include 'erp-hr'
+include 'erp-vacation'
+include 'erp-db-manager'
+include 'erp-kerberos'

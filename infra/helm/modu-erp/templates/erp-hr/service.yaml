@@ -1,0 +1,17 @@
+{{- $svc := index .Values "erp-hr" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: erp-hr
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "modu-erp.labels" . | nindent 4 }}
+    app.kubernetes.io/name: erp-hr
+spec:
+  type: {{ $svc.service.type }}
+  selector:
+    app.kubernetes.io/name: erp-hr
+  ports:
+    - port: {{ $svc.service.port }}
+      targetPort: {{ $svc.service.port }}
+      protocol: TCP

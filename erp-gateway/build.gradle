@@ -1,0 +1,6 @@
+apply plugin: 'org.springframework.boot'
+
+dependencies {
+    implementation project(':erp-common')
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
+}

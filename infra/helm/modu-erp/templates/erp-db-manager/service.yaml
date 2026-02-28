@@ -1,0 +1,17 @@
+{{- $svc := index .Values "erp-db-manager" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: erp-db-manager
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "modu-erp.labels" . | nindent 4 }}
+    app.kubernetes.io/name: erp-db-manager
+spec:
+  type: {{ $svc.service.type }}
+  selector:
+    app.kubernetes.io/name: erp-db-manager
+  ports:
+    - port: {{ $svc.service.port }}
+      targetPort: {{ $svc.service.port }}
+      protocol: TCP

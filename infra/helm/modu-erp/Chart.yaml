@@ -1,0 +1,9 @@
+apiVersion: v2
+name: modu-erp
+description: Open-source company ERP system by seoha-labs
+type: application
+version: 0.1.0
+appVersion: "0.0.1"
+maintainers:
+  - name: seoha-labs
+    url: https://github.com/seoha-labs

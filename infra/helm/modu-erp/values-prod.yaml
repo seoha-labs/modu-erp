@@ -26,7 +26,7 @@ erp-gateway:
     minReplicas: 2
     maxReplicas: 5
 
-erp-hr:
+erp-organization:
   image:
     pullPolicy: Always
   replicaCount: 2

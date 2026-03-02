@@ -10,7 +10,7 @@ COPY build.gradle settings.gradle gradle.properties ./
 
 COPY erp-common/build.gradle erp-common/
 COPY erp-gateway/build.gradle erp-gateway/
-COPY erp-hr/build.gradle erp-hr/
+COPY erp-organization/build.gradle erp-organization/
 COPY erp-vacation/build.gradle erp-vacation/
 COPY erp-db-manager/build.gradle erp-db-manager/
 COPY erp-kerberos/build.gradle erp-kerberos/

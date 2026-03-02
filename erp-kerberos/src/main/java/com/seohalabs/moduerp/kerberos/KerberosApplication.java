@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class KerberosApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(KerberosApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(KerberosApplication.class, args);
+  }
 }

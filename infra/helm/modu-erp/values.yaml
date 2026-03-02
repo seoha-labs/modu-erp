@@ -23,7 +23,7 @@ erp-gateway:
     port: 8080
   env:
     KEYCLOAK_ISSUER_URI: ""
-    HR_SERVICE_URL: "http://erp-hr:8081"
+    HR_SERVICE_URL: "http://erp-organization:8081"
     VACATION_SERVICE_URL: "http://erp-vacation:8082"
     DB_MANAGER_SERVICE_URL: "http://erp-db-manager:8083"
     KERBEROS_SERVICE_URL: "http://erp-kerberos:8084"
@@ -40,9 +40,9 @@ erp-gateway:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 70
 
-erp-hr:
+erp-organization:
   image:
-    repository: seohalabs/erp-hr
+    repository: seohalabs/erp-organization
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1

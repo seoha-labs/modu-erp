@@ -1,0 +1,43 @@
+### ============================================================
+### 04. 직급 관리
+### ============================================================
+### [사전 조건] admin 토큰 발급 (01-auth.http)
+### ============================================================
+
+### 직급 목록 조회 (member 이상이면 가능)
+GET http://localhost:8081/positions
+Authorization: Bearer {{admin_token}}
+
+###
+
+### 직급 생성 (ADMIN 전용)
+POST http://localhost:8081/positions
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "사원",
+  "level": 1
+}
+
+###
+
+POST http://localhost:8081/positions
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "대리",
+  "level": 2
+}
+
+###
+
+POST http://localhost:8081/positions
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "과장",
+  "level": 3
+}

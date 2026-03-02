@@ -1,0 +1,43 @@
+### ============================================================
+### 00. Keycloak + OpenFGA 초기 설정
+### ============================================================
+### [완전 초기화 순서]
+### 1. infra 실행: cd infra && docker-compose up -d
+### 2. OpenFGA 마이그레이션 (최초 1회):
+###    docker run --rm --network infra_modu-erp openfga/openfga:latest \
+###      migrate --datastore-engine postgres \
+###      --datastore-uri "postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable"
+### 3. modu-erp realm 생성 (아래 요청 실행)
+### 4. erp-organization 최초 기동 (store ID 없이):
+###    ./gradlew :erp-organization:bootRun
+###    → 로그에서 OPENFGA_STORE_ID 확인 후 Ctrl+C
+### 5. erp-organization 2차 기동 (store ID만):
+###    OPENFGA_STORE_ID=<id> ./gradlew :erp-organization:bootRun
+###    → 로그에서 OPENFGA_MODEL_ID 확인 후 Ctrl+C
+### 6. erp-organization 최종 기동 (두 ID 모두):
+###    OPENFGA_STORE_ID=<id> OPENFGA_MODEL_ID=<id> ./gradlew :erp-organization:bootRun
+### 7. admin 토큰 발급 (01-auth.http)
+### ============================================================
+
+### 1. Keycloak master 토큰 발급
+# > 응답의 access_token 을 복사해둡니다
+POST http://localhost:8180/realms/master/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=admin-cli&username=admin&password=admin
+
+### 2. modu-erp realm 생성
+# Authorization 헤더에 위에서 받은 access_token 입력
+POST http://localhost:8180/admin/realms
+Authorization: Bearer <master_access_token>
+Content-Type: application/json
+
+{
+  "realm": "modu-erp",
+  "enabled": true,
+  "registrationAllowed": false
+}
+
+### 3. (선택) realm 확인
+GET http://localhost:8180/admin/realms/modu-erp
+Authorization: Bearer <master_access_token>

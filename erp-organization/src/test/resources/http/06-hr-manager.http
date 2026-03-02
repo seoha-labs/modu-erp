@@ -1,0 +1,53 @@
+### ============================================================
+### 06. hr_manager 권한 부여 / 회수 / 위임 테스트
+### ============================================================
+### [시나리오]
+###   1. admin 이 홍길동에게 hr_manager 부여
+###   2. 홍길동 토큰으로 임직원 등록/목록 조회 → 200 (hr_manager 권한)
+###   3. 홍길동이 이영희에게 hr_manager 위임
+###   4. 이영희 토큰으로 임직원 목록 조회 → 200
+###   5. admin 이 홍길동의 hr_manager 회수
+###   6. 홍길동 토큰으로 임직원 목록 조회 → 403
+### ============================================================
+
+### 1. hr_manager 부여 (ADMIN 전용 또는 hr_manager)
+# {id} 를 hr_manager 권한을 받을 임직원 ID 로 교체
+POST http://localhost:8081/employees/2/hr-manager
+Authorization: Bearer {{admin_token}}
+
+###
+
+### 2. hr_manager 토큰으로 임직원 목록 조회 → 200
+GET http://localhost:8081/employees
+Authorization: Bearer {{hr_manager_token}}
+
+###
+
+### 3. hr_manager 가 다른 임직원에게 hr_manager 위임
+# {id} 를 위임받을 임직원 ID 로 교체
+POST http://localhost:8081/employees/3/hr-manager
+Authorization: Bearer {{hr_manager_token}}
+
+###
+
+### 4. 위임받은 사람 토큰으로 임직원 목록 조회 → 200
+GET http://localhost:8081/employees
+Authorization: Bearer {{employee_token}}
+
+###
+
+### 5. hr_manager 회수 (ADMIN 또는 hr_manager)
+DELETE http://localhost:8081/employees/2/hr-manager
+Authorization: Bearer {{admin_token}}
+
+###
+
+### 6. 회수된 사람 토큰으로 임직원 목록 조회 → 403
+GET http://localhost:8081/employees
+Authorization: Bearer {{hr_manager_token}}
+
+###
+
+### EMPLOYEE 가 hr_manager 부여 시도 → 403
+POST http://localhost:8081/employees/3/hr-manager
+Authorization: Bearer {{employee_token}}

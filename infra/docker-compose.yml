@@ -52,6 +52,21 @@ services:
       postgres:
         condition: service_healthy
 
+  openfga:
+    image: openfga/openfga:latest
+    container_name: modu-erp-openfga
+    command: run
+    environment:
+      OPENFGA_DATASTORE_ENGINE: postgres
+      OPENFGA_DATASTORE_URI: postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable
+    ports:
+      - "8090:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - modu-erp
+
   # redis:
   #   image: redis:7-alpine
   #   container_name: modu-erp-redis
@@ -73,7 +88,7 @@ services:
   #     - "8080:8080"
   #   environment:
   #     KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/modu-erp
-  #     HR_SERVICE_URL: http://erp-hr:8081
+  #     HR_SERVICE_URL: http://erp-organization:8081
   #     VACATION_SERVICE_URL: http://erp-vacation:8082
   #     DB_MANAGER_SERVICE_URL: http://erp-db-manager:8083
   #     KERBEROS_SERVICE_URL: http://erp-kerberos:8084
@@ -82,11 +97,11 @@ services:
   #   depends_on:
   #     - keycloak
 
-  # erp-hr:
+  # erp-organization:
   #   build:
   #     context: ..
-  #     dockerfile: erp-hr/Dockerfile
-  #   container_name: modu-erp-hr
+  #     dockerfile: erp-organization/Dockerfile
+  #   container_name: modu-erp-organization
   #   ports:
   #     - "8081:8081"
   #   environment:
@@ -112,7 +127,7 @@ services:
   #     DB_USERNAME: postgres
   #     DB_PASSWORD: postgres
   #     KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/modu-erp
-  #     HR_SERVICE_URL: http://erp-hr:8081
+  #     HR_SERVICE_URL: http://erp-organization:8081
   #   networks:
   #     - modu-erp
   #   depends_on:

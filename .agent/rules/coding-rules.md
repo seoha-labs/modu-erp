@@ -55,10 +55,30 @@ if (line != null)
 
 Do not create an interface if there is only one class that implements it. Interfaces exist to abstract over multiple implementations or to define a boundary.
 
-## No Getters or Setters
+## Entity Naming
 
-Do not expose internal state through `getX()` / `setX()` methods. Instead, model behavior directly on the object.
+Classes annotated with `@Entity` must use `Entity` as a suffix.
 
-## No Common Affixes
+```java
+// Bad
+@Entity
+public class Employee { ... }
 
-Do not suffix or prefix class names with generic words such as `Manager`, `Handler`, `Helper`, `Util`, `Service`, `Data`, `Info`, `Processor`, `Wrapper`. Name classes after what they concretely represent.
+// Good
+@Entity
+public class EmployeeEntity { ... }
+```
+
+## Enum Naming
+
+All enum types must use `Type` as a suffix.
+
+```java
+// Bad
+enum EmploymentStatus { ... }
+enum Gender { ... }
+
+// Good
+enum EmploymentStatusType { ... }
+enum GenderType { ... }
+```

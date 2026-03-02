@@ -2,7 +2,7 @@ rootProject.name = 'modu-erp'
 
 include 'erp-common'
 include 'erp-gateway'
-include 'erp-hr'
+include 'erp-organization'
 include 'erp-vacation'
 include 'erp-db-manager'
 include 'erp-kerberos'

@@ -17,7 +17,7 @@ erp-gateway:
     minReplicas: 1
     maxReplicas: 3
 
-erp-hr:
+erp-organization:
   replicaCount: 1
   hpa:
     enabled: true

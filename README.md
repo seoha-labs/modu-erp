@@ -7,7 +7,7 @@ An open-source company ERP system built with Java 21 and Spring Boot, organized 
 | Module | Port | Description |
 |---|---|---|
 | `erp-gateway` | 8080 | API Gateway — JWT validation and routing |
-| `erp-hr` | 8081 | Human Resources — employees, departments, approval lines |
+| `erp-organization` | 8081 | Organization — employees, departments, positions, roles |
 | `erp-vacation` | 8082 | Vacation & draft request management |
 | `erp-db-manager` | 8083 | Database configuration management |
 | `erp-kerberos` | 8084 | Company server information registry |
@@ -22,13 +22,13 @@ Incoming Request
     │
     ▼
 erp-gateway (8080)
-    ├── /api/hr/**          → erp-hr (8081)
-    ├── /api/vacation/**    → erp-vacation (8082)
-    ├── /api/db-manager/**  → erp-db-manager (8083)
-    └── /api/kerberos/**    → erp-kerberos (8084)
+    ├── /api/organization/**  → erp-organization (8081)
+    ├── /api/vacation/**      → erp-vacation (8082)
+    ├── /api/db-manager/**    → erp-db-manager (8083)
+    └── /api/kerberos/**      → erp-kerberos (8084)
 
 All service modules depend on erp-common (shared library)
-erp-vacation calls erp-hr via OpenFeign (approval line resolution)
+erp-vacation calls erp-organization via OpenFeign (approval line resolution)
 ```
 
 ### DDD Package Structure
@@ -45,7 +45,7 @@ com.seohalabs.moduerp.{module}/
 │   ├── command/         # Command handlers (write side)
 │   └── query/           # Query handlers (read side)
 ├── infrastructure/
-│   ├── persistence/     # JPA entities, QueryDSL repositories
+│   ├── persistence/     # Repository implementations
 │   └── client/          # Feign clients, external integrations
 └── presentation/
     ├── rest/            # REST controllers
@@ -59,12 +59,15 @@ The `domain` layer has no dependency on any other layer. Infrastructure implemen
 ### Authentication & Authorization
 
 All services act as OAuth2 Resource Servers, validating JWT tokens issued by Keycloak.
+`erp-organization` uses OpenFGA for fine-grained Relationship-Based Access Control (ReBAC).
 
 ```
-Client → erp-gateway (validates token) → Service (enforces roles)
+Client → erp-gateway (validates JWT) → Service (enforces roles)
                   │
                   ▼
             Keycloak (modu-erp realm)
+
+erp-organization → OpenFGA (permission checks via @PreAuthorize)
 ```
 
 ## Tech Stack
@@ -73,11 +76,12 @@ Client → erp-gateway (validates token) → Service (enforces roles)
 |---|---|
 | Language | Java 21 |
 | Framework | Spring Boot 3.4.x |
-| Gateway | Spring Cloud Gateway |
-| ORM | Spring Data JPA + QueryDSL 5.x |
+| Gateway | Spring Cloud Gateway (WebFlux) |
+| Reactive Stack | Spring WebFlux + Spring Data R2DBC |
 | Database | PostgreSQL 16 |
 | Auth | Keycloak 26 (OAuth2 / JWT) |
-| Build | Gradle (multi-module) |
+| Authorization | OpenFGA (ReBAC) |
+| Build | Gradle (multi-module, Groovy DSL) |
 | Deployment | Docker / Kubernetes |
 
 ## Getting Started
@@ -90,23 +94,44 @@ Client → erp-gateway (validates token) → Service (enforces roles)
 ### Run Local Infrastructure
 
 ```bash
+cd infra
 docker-compose up -d
 ```
 
 This starts:
-- **PostgreSQL** at `localhost:5432` — databases are initialized via `scripts/init-db.sql`
+- **PostgreSQL** at `localhost:5432` — databases initialized via `infra/postgres/init-db.sql`
 - **Keycloak** at `http://localhost:8180` — admin credentials: `admin / admin`
+- **OpenFGA** at `http://localhost:8090`
 
 ### Keycloak Setup
 
 1. Open `http://localhost:8180` and log in.
 2. Create a Realm named `modu-erp`.
-3. Create clients and roles as needed per service.
+3. Create an `admin-cli` client with service account roles enabled.
+
+### OpenFGA Setup
+
+On first startup, `erp-organization` creates the FGA store and model automatically.
+Follow the log output to set the required environment variables before the next start:
+
+```
+# First run — creates store
+=== Initial startup. Set OPENFGA_STORE_ID=<id> as an environment variable and restart ===
+
+# Second run — creates authorization model
+=== Set OPENFGA_MODEL_ID=<id> as an environment variable and restart ===
+```
 
 ### Run a Service
 
 ```bash
-./gradlew :erp-hr:bootRun
+./gradlew :erp-organization:bootRun
+```
+
+With OpenFGA configured:
+
+```bash
+OPENFGA_STORE_ID=<id> OPENFGA_MODEL_ID=<id> ./gradlew :erp-organization:bootRun
 ```
 
 ### Build All
@@ -122,20 +147,18 @@ modu-erp/
 ├── build.gradle              # Root build — shared plugin versions and BOM
 ├── settings.gradle           # Module registration
 ├── gradle.properties         # Version declarations (BOM-unmanaged libraries)
-├── docker-compose.yml        # Local infrastructure
-├── scripts/
-│   └── init-db.sql           # PostgreSQL database initialization
 ├── erp-common/
 ├── erp-gateway/
-├── erp-hr/
+├── erp-organization/
 ├── erp-vacation/
 ├── erp-db-manager/
-└── erp-kerberos/
+├── erp-kerberos/
+└── infra/
+    ├── docker-compose.yml    # Local infrastructure (PostgreSQL, Keycloak, OpenFGA)
+    ├── postgres/
+    │   └── init-db.sql       # Database initialization
+    └── helm/                 # Kubernetes Helm charts
 ```
-
-## Contributing
-
-Contributions are welcome. Please open an issue first to discuss what you would like to change.
 
 ## License
 

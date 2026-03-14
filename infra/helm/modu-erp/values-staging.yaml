@@ -10,25 +10,25 @@ database:
   username: "erp_user"
   # password: set via --set or external secret
 
-erp-gateway:
+gateway:
   replicaCount: 1
   hpa:
     enabled: true
     minReplicas: 1
     maxReplicas: 3
 
-erp-organization:
+organization:
   replicaCount: 1
   hpa:
     enabled: true
     minReplicas: 1
     maxReplicas: 3
 
-erp-vacation:
+vacation:
   replicaCount: 1
 
-erp-db-manager:
+db-manager:
   replicaCount: 1
 
-erp-kerberos:
+kerberos:
   replicaCount: 1

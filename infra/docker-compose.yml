@@ -79,29 +79,29 @@ services:
 
   # --------------- Application (optional) ---------------
 
-  # erp-gateway:
+  # gateway:
   #   build:
   #     context: ..
-  #     dockerfile: erp-gateway/Dockerfile
-  #   container_name: modu-erp-gateway
+  #     dockerfile: gateway/Dockerfile
+  #   container_name: modu-gateway
   #   ports:
   #     - "8080:8080"
   #   environment:
   #     KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/modu-erp
-  #     HR_SERVICE_URL: http://erp-organization:8081
-  #     VACATION_SERVICE_URL: http://erp-vacation:8082
-  #     DB_MANAGER_SERVICE_URL: http://erp-db-manager:8083
-  #     KERBEROS_SERVICE_URL: http://erp-kerberos:8084
+  #     HR_SERVICE_URL: http://organization:8081
+  #     VACATION_SERVICE_URL: http://vacation:8082
+  #     DB_MANAGER_SERVICE_URL: http://db-manager:8083
+  #     KERBEROS_SERVICE_URL: http://kerberos:8084
   #   networks:
   #     - modu-erp
   #   depends_on:
   #     - keycloak
 
-  # erp-organization:
+  # organization:
   #   build:
   #     context: ..
-  #     dockerfile: erp-organization/Dockerfile
-  #   container_name: modu-erp-organization
+  #     dockerfile: organization/Dockerfile
+  #   container_name: modu-organization
   #   ports:
   #     - "8081:8081"
   #   environment:
@@ -115,11 +115,11 @@ services:
   #     postgres:
   #       condition: service_healthy
 
-  # erp-vacation:
+  # vacation:
   #   build:
   #     context: ..
-  #     dockerfile: erp-vacation/Dockerfile
-  #   container_name: modu-erp-vacation
+  #     dockerfile: vacation/Dockerfile
+  #   container_name: modu-vacation
   #   ports:
   #     - "8082:8082"
   #   environment:
@@ -127,18 +127,18 @@ services:
   #     DB_USERNAME: postgres
   #     DB_PASSWORD: postgres
   #     KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/modu-erp
-  #     HR_SERVICE_URL: http://erp-organization:8081
+  #     HR_SERVICE_URL: http://organization:8081
   #   networks:
   #     - modu-erp
   #   depends_on:
   #     postgres:
   #       condition: service_healthy
 
-  # erp-db-manager:
+  # db-manager:
   #   build:
   #     context: ..
-  #     dockerfile: erp-db-manager/Dockerfile
-  #   container_name: modu-erp-db-manager
+  #     dockerfile: db-manager/Dockerfile
+  #   container_name: modu-db-manager
   #   ports:
   #     - "8083:8083"
   #   environment:
@@ -152,11 +152,11 @@ services:
   #     postgres:
   #       condition: service_healthy
 
-  # erp-kerberos:
+  # kerberos:
   #   build:
   #     context: ..
-  #     dockerfile: erp-kerberos/Dockerfile
-  #   container_name: modu-erp-kerberos
+  #     dockerfile: kerberos/Dockerfile
+  #   container_name: modu-kerberos
   #   ports:
   #     - "8084:8084"
   #   environment:

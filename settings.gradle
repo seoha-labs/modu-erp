@@ -1,8 +1,15 @@
 rootProject.name = 'modu-erp'
 
-include 'erp-common'
-include 'erp-gateway'
-include 'erp-organization'
-include 'erp-vacation'
-include 'erp-db-manager'
-include 'erp-kerberos'
+include 'security'
+include 'gateway'
+include 'organization'
+include 'vacation'
+include 'db-manager'
+include 'kerberos'
+
+project(':security').projectDir = file('shared/security')
+project(':gateway').projectDir = file('apps/gateway')
+project(':organization').projectDir = file('apps/organization')
+project(':vacation').projectDir = file('apps/vacation')
+project(':db-manager').projectDir = file('apps/db-manager')
+project(':kerberos').projectDir = file('apps/kerberos')

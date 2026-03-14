@@ -3,20 +3,20 @@
 ## Module Structure & Dependencies
 
 ```
-Incoming Request → erp-gateway (8080) → erp-hr (8081)
-                                       → erp-vacation (8082) → [OpenFeign] → erp-hr
-                                       → erp-db-manager (8083)
-                                       → erp-kerberos (8084)
+Incoming Request → gateway (8080) → erp-hr (8081)
+                                       → vacation (8082) → [OpenFeign] → erp-hr
+                                       → db-manager (8083)
+                                       → kerberos (8084)
 
-All service modules → erp-common (shared library)
+All service modules → security (shared library)
 ```
 
-- **`erp-common`**: Pure library — no Spring Boot plugin applied. Provides shared Spring Security and OAuth2 Resource Server configuration. Dependencies declared with `api()` are transitively exposed to all modules.
-- **`erp-gateway`**: Spring Cloud Gateway (WebFlux-based). Validates Keycloak JWT tokens and routes to downstream services. Must remain WebFlux-only — do not mix with Servlet stack.
+- **`security`**: Pure library — no Spring Boot plugin applied. Provides shared Spring Security and OAuth2 Resource Server configuration. Dependencies declared with `api()` are transitively exposed to all modules.
+- **`gateway`**: Spring Cloud Gateway (WebFlux-based). Validates Keycloak JWT tokens and routes to downstream services. Must remain WebFlux-only — do not mix with Servlet stack.
 - **`erp-hr`**: Master data for employees, organization structure, and approval lines. Core module referenced by other services.
-- **`erp-vacation`**: Handles vacation requests and drafts. Calls `erp-hr` via OpenFeign to resolve organization and approval line data.
-- **`erp-db-manager`**: Database configuration management.
-- **`erp-kerberos`**: Company server information lookup.
+- **`vacation`**: Handles vacation requests and drafts. Calls `erp-hr` via OpenFeign to resolve organization and approval line data.
+- **`db-manager`**: Database configuration management.
+- **`kerberos`**: Company server information lookup.
 
 ## DDD Package Structure
 
@@ -66,8 +66,8 @@ com.seohalabs.moduerp.{module}/
 
 ## Inter-Service Communication
 
-- Gradle project dependencies (`implementation project(':...')`) are only allowed pointing to `erp-common`. Service-to-service calls must go over HTTP.
-- `erp-vacation` → `erp-hr` via OpenFeign (`@EnableFeignClients` is already applied on `VacationApplication`).
+- Gradle project dependencies (`implementation project(':...')`) are only allowed pointing to `security`. Service-to-service calls must go over HTTP.
+- `vacation` → `erp-hr` via OpenFeign (`@EnableFeignClients` is already applied on `VacationApplication`).
 
 ## Environment Variables
 
@@ -79,6 +79,6 @@ com.seohalabs.moduerp.{module}/
 | `DB_USERNAME` | `postgres` | DB username |
 | `DB_PASSWORD` | `postgres` | DB password |
 | `HR_SERVICE_URL` | `http://localhost:8081` | erp-hr service URL |
-| `VACATION_SERVICE_URL` | `http://localhost:8082` | erp-vacation service URL |
-| `DB_MANAGER_SERVICE_URL` | `http://localhost:8083` | erp-db-manager service URL |
-| `KERBEROS_SERVICE_URL` | `http://localhost:8084` | erp-kerberos service URL |
+| `VACATION_SERVICE_URL` | `http://localhost:8082` | vacation service URL |
+| `DB_MANAGER_SERVICE_URL` | `http://localhost:8083` | db-manager service URL |
+| `KERBEROS_SERVICE_URL` | `http://localhost:8084` | kerberos service URL |

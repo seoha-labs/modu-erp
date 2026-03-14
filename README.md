@@ -6,12 +6,12 @@ An open-source company ERP system built with Java 21 and Spring Boot, organized 
 
 | Module | Port | Description |
 |---|---|---|
-| `erp-gateway` | 8080 | API Gateway — JWT validation and routing |
-| `erp-organization` | 8081 | Organization — employees, departments, positions, roles |
-| `erp-vacation` | 8082 | Vacation & draft request management |
-| `erp-db-manager` | 8083 | Database configuration management |
-| `erp-kerberos` | 8084 | Company server information registry |
-| `erp-common` | — | Shared library — security, OAuth2 configuration |
+| `gateway` | 8080 | API Gateway — JWT validation and routing |
+| `organization` | 8081 | Organization — employees, departments, positions, roles |
+| `vacation` | 8082 | Vacation & draft request management |
+| `db-manager` | 8083 | Database configuration management |
+| `kerberos` | 8084 | Company server information registry |
+| `security` | — | Shared library — security, OAuth2 configuration |
 
 ## Architecture
 
@@ -21,53 +21,57 @@ An open-source company ERP system built with Java 21 and Spring Boot, organized 
 Incoming Request
     │
     ▼
-erp-gateway (8080)
-    ├── /api/organization/**  → erp-organization (8081)
-    ├── /api/vacation/**      → erp-vacation (8082)
-    ├── /api/db-manager/**    → erp-db-manager (8083)
-    └── /api/kerberos/**      → erp-kerberos (8084)
+gateway (8080)
+    ├── /api/organization/**  → organization (8081)
+    ├── /api/vacation/**      → vacation (8082)
+    ├── /api/db-manager/**    → db-manager (8083)
+    └── /api/kerberos/**      → kerberos (8084)
 
-All service modules depend on erp-common (shared library)
-erp-vacation calls erp-organization via OpenFeign (approval line resolution)
+All service modules depend on security (shared library)
+vacation calls organization via OpenFeign (approval line resolution)
 ```
 
-### DDD Package Structure
+### Feature-Oriented Package Structure
 
-Each service module follows Domain-Driven Design with the following package layout:
+Service modules can organize code by business feature first, then by layer inside each feature:
 
 ```
 com.seohalabs.moduerp.{module}/
-├── domain/
-│   ├── model/           # Aggregates, Entities, Value Objects
-│   ├── repository/      # Repository interfaces (domain layer)
-│   └── service/         # Domain Services
-├── application/
-│   ├── command/         # Command handlers (write side)
-│   └── query/           # Query handlers (read side)
-├── infrastructure/
-│   ├── persistence/     # Repository implementations
-│   └── client/          # Feign clients, external integrations
-└── presentation/
-    ├── rest/            # REST controllers
-    └── dto/             # Request / Response DTOs
+├── employee/
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   └── presentation/
+├── department/
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   └── presentation/
+├── role/
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   └── presentation/
+└── shared/
+    └── infrastructure/
 ```
 
 **Dependency direction**: `presentation` → `application` → `domain` ← `infrastructure`
 
-The `domain` layer has no dependency on any other layer. Infrastructure implements domain interfaces.
+This keeps each business area cohesive while preserving clear domain and infrastructure boundaries.
 
 ### Authentication & Authorization
 
 All services act as OAuth2 Resource Servers, validating JWT tokens issued by Keycloak.
-`erp-organization` uses OpenFGA for fine-grained Relationship-Based Access Control (ReBAC).
+`organization` uses OpenFGA for fine-grained Relationship-Based Access Control (ReBAC).
 
 ```
-Client → erp-gateway (validates JWT) → Service (enforces roles)
+Client → gateway (validates JWT) → Service (enforces roles)
                   │
                   ▼
             Keycloak (modu-erp realm)
 
-erp-organization → OpenFGA (permission checks via @PreAuthorize)
+organization → OpenFGA (permission checks via @PreAuthorize)
 ```
 
 ## Tech Stack
@@ -111,7 +115,7 @@ This starts:
 
 ### OpenFGA Setup
 
-On first startup, `erp-organization` creates the FGA store and model automatically.
+On first startup, `organization` creates the FGA store and model automatically.
 Follow the log output to set the required environment variables before the next start:
 
 ```
@@ -125,13 +129,13 @@ Follow the log output to set the required environment variables before the next 
 ### Run a Service
 
 ```bash
-./gradlew :erp-organization:bootRun
+./gradlew :organization:bootRun
 ```
 
 With OpenFGA configured:
 
 ```bash
-OPENFGA_STORE_ID=<id> OPENFGA_MODEL_ID=<id> ./gradlew :erp-organization:bootRun
+OPENFGA_STORE_ID=<id> OPENFGA_MODEL_ID=<id> ./gradlew :organization:bootRun
 ```
 
 ### Build All
@@ -142,22 +146,24 @@ OPENFGA_STORE_ID=<id> OPENFGA_MODEL_ID=<id> ./gradlew :erp-organization:bootRun
 
 ## Project Structure
 
-```
+```text
 modu-erp/
+├── apps/
+│   ├── gateway/
+│   ├── organization/
+│   ├── vacation/
+│   ├── db-manager/
+│   └── kerberos/
+├── shared/
+│   └── security/
+├── infra/
+│   ├── docker-compose.yml    # Local infrastructure (PostgreSQL, Keycloak, OpenFGA)
+│   ├── postgres/
+│   │   └── init-db.sql       # Database initialization
+│   └── helm/                 # Kubernetes Helm charts
 ├── build.gradle              # Root build — shared plugin versions and BOM
 ├── settings.gradle           # Module registration
-├── gradle.properties         # Version declarations (BOM-unmanaged libraries)
-├── erp-common/
-├── erp-gateway/
-├── erp-organization/
-├── erp-vacation/
-├── erp-db-manager/
-├── erp-kerberos/
-└── infra/
-    ├── docker-compose.yml    # Local infrastructure (PostgreSQL, Keycloak, OpenFGA)
-    ├── postgres/
-    │   └── init-db.sql       # Database initialization
-    └── helm/                 # Kubernetes Helm charts
+└── gradle.properties         # Version declarations (BOM-unmanaged libraries)
 ```
 
 ## License

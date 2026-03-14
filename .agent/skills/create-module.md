@@ -14,7 +14,7 @@ include 'erp-{name}'
 apply plugin: 'org.springframework.boot'
 
 dependencies {
-    implementation project(':erp-common')
+    implementation project(':security')
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
@@ -71,7 +71,7 @@ server:
 CREATE DATABASE erp_{name};
 ```
 
-### 6. Add Gateway route in `erp-gateway/src/main/resources/application.yml`
+### 6. Add Gateway route in `gateway/src/main/resources/application.yml`
 ```yaml
 - id: erp-{name}
   uri: ${"{NAME}_SERVICE_URL:http://localhost:{port}"}

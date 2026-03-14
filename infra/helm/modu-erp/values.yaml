@@ -12,9 +12,9 @@ database:
   username: ""
   password: ""
 
-erp-gateway:
+gateway:
   image:
-    repository: seohalabs/erp-gateway
+    repository: seohalabs/gateway
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1
@@ -23,10 +23,10 @@ erp-gateway:
     port: 8080
   env:
     KEYCLOAK_ISSUER_URI: ""
-    HR_SERVICE_URL: "http://erp-organization:8081"
-    VACATION_SERVICE_URL: "http://erp-vacation:8082"
-    DB_MANAGER_SERVICE_URL: "http://erp-db-manager:8083"
-    KERBEROS_SERVICE_URL: "http://erp-kerberos:8084"
+    HR_SERVICE_URL: "http://organization:8081"
+    VACATION_SERVICE_URL: "http://vacation:8082"
+    DB_MANAGER_SERVICE_URL: "http://db-manager:8083"
+    KERBEROS_SERVICE_URL: "http://kerberos:8084"
   resources:
     requests:
       cpu: 100m
@@ -40,9 +40,9 @@ erp-gateway:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 70
 
-erp-organization:
+organization:
   image:
-    repository: seohalabs/erp-organization
+    repository: seohalabs/organization
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1
@@ -62,9 +62,9 @@ erp-organization:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 70
 
-erp-vacation:
+vacation:
   image:
-    repository: seohalabs/erp-vacation
+    repository: seohalabs/vacation
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1
@@ -84,9 +84,9 @@ erp-vacation:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 70
 
-erp-db-manager:
+db-manager:
   image:
-    repository: seohalabs/erp-db-manager
+    repository: seohalabs/db-manager
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1
@@ -106,9 +106,9 @@ erp-db-manager:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 70
 
-erp-kerberos:
+kerberos:
   image:
-    repository: seohalabs/erp-kerberos
+    repository: seohalabs/kerberos
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1

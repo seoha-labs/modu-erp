@@ -13,6 +13,7 @@ public final class EmployeeFactory {
         .email(email)
         .departmentId(departmentId)
         .positionId(positionId)
+        .status(EmploymentStatusType.ACTIVE)
         .roleIds(roleIds)
         .build();
   }

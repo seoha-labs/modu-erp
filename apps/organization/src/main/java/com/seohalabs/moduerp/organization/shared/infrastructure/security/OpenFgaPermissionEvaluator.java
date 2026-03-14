@@ -8,10 +8,14 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OpenFgaPermissionEvaluator implements PermissionEvaluator {
@@ -34,8 +38,43 @@ public class OpenFgaPermissionEvaluator implements PermissionEvaluator {
   @Override
   public boolean hasPermission(
       Authentication auth, Serializable targetId, String targetType, Object permission) {
-    String user = "user:" + auth.getName();
-    return checkPermission(user, permission.toString(), fgaObject(targetId, targetType));
+    String userId = resolveUserId(auth);
+    if (userId == null) {
+      return false;
+    }
+    return checkPermission(userId, permission.toString(), fgaObject(targetId, targetType));
+  }
+
+  private String resolveUserId(Authentication auth) {
+    if (!(auth instanceof JwtAuthenticationToken jwtAuth)) {
+      log.warn(
+          "Cannot resolve user identity: not a JwtAuthenticationToken, got {}",
+          auth.getClass().getSimpleName());
+      return null;
+    }
+    return resolveFromJwt(jwtAuth.getToken());
+  }
+
+  private String resolveFromJwt(Jwt jwt) {
+    String sub = extractSub(jwt);
+    return sub != null ? sub : extractPreferredUsername(jwt);
+  }
+
+  private String extractSub(Jwt jwt) {
+    String sub = jwt.getSubject();
+    if (sub == null || sub.isBlank()) {
+      return null;
+    }
+    return "user:" + sub;
+  }
+
+  private String extractPreferredUsername(Jwt jwt) {
+    String username = jwt.getClaimAsString("preferred_username");
+    if (username == null || username.isBlank()) {
+      log.warn("JWT has no usable identity claim (sub or preferred_username)");
+      return null;
+    }
+    return "user:" + username;
   }
 
   private String fgaObject(Serializable targetId, String targetType) {

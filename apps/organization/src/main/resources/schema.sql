@@ -1,0 +1,28 @@
+CREATE TABLE IF NOT EXISTS roles (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  description VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS departments (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  parent_id BIGINT NULL REFERENCES departments (id)
+);
+
+CREATE TABLE IF NOT EXISTS positions (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  level INT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS employees (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  department_id BIGINT NULL REFERENCES departments (id),
+  position_id BIGINT NULL REFERENCES positions (id),
+  status VARCHAR(50) NOT NULL,
+  keycloak_id VARCHAR(255) NOT NULL UNIQUE,
+  role_ids BIGINT[] NOT NULL
+);

@@ -7,16 +7,18 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableWebFluxSecurity
-@EnableReactiveMethodSecurity
+@EnableReactiveMethodSecurity(useAuthorizationManager = false)
 public class HrSecurityConfig {
 
   @Bean
@@ -30,7 +32,7 @@ public class HrSecurityConfig {
   }
 
   @Bean
-  static MethodSecurityExpressionHandler methodSecurityExpressionHandler(
+  public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
       PermissionEvaluator permissionEvaluator) {
     DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
     handler.setPermissionEvaluator(permissionEvaluator);
@@ -45,7 +47,7 @@ public class HrSecurityConfig {
         .build();
   }
 
-  private Converter<Jwt, ?> jwtAdapter() {
+  private Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtAdapter() {
     return new ReactiveJwtAuthenticationConverterAdapter(jwtConverter());
   }
 }

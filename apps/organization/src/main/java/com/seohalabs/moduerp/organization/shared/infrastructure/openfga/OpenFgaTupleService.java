@@ -3,24 +3,30 @@ package com.seohalabs.moduerp.organization.shared.infrastructure.openfga;
 import dev.openfga.sdk.api.client.OpenFgaClient;
 import dev.openfga.sdk.api.client.model.ClientTupleKey;
 import dev.openfga.sdk.api.client.model.ClientTupleKeyWithoutCondition;
+import dev.openfga.sdk.api.client.model.ClientWriteResponse;
+import dev.openfga.sdk.errors.FgaApiValidationError;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OpenFgaTupleService {
 
   private final OpenFgaClient fgaClient;
 
-  public Mono<Void> writeEmployeeRegistration(String keycloakId, Long employeeId, Set<String> roleNames) {
+  public Mono<Void> writeEmployeeRegistration(
+      String keycloakId, Long employeeId, Set<String> roleNames) {
     return writeTuples(allEmployeeTuples(keycloakId, employeeId, roleNames));
   }
 
-  public Mono<Void> deleteEmployeeResignation(String keycloakId, Long employeeId, Set<String> roleNames) {
+  public Mono<Void> deleteEmployeeResignation(
+      String keycloakId, Long employeeId, Set<String> roleNames) {
     return deleteTuples(allDeleteTuples(keycloakId, employeeId, roleNames));
   }
 
@@ -70,8 +76,7 @@ public class OpenFgaTupleService {
       String keycloakId, Long employeeId) {
     return List.of(
         deleteKey("user:" + keycloakId, "member", "system:erp"),
-        deleteKey("user:" + keycloakId, "owner", "employee:" + employeeId),
-        deleteKey("system:erp", "parent", "employee:" + employeeId));
+        deleteKey("user:" + keycloakId, "owner", "employee:" + employeeId));
   }
 
   private List<ClientTupleKey> roleTuples(String keycloakId, Set<String> roleNames) {
@@ -92,13 +97,42 @@ public class OpenFgaTupleService {
   private Mono<Void> writeTuples(List<ClientTupleKey> tuples) {
     return Mono.fromCallable(() -> fgaClient.writeTuples(tuples))
         .flatMap(Mono::fromFuture)
+        .onErrorResume(this::ignoreExistingTupleError)
         .then();
   }
 
   private Mono<Void> deleteTuples(List<ClientTupleKeyWithoutCondition> tuples) {
     return Mono.fromCallable(() -> fgaClient.deleteTuples(tuples))
         .flatMap(Mono::fromFuture)
+        .onErrorResume(this::ignoreMissingTupleError)
         .then();
+  }
+
+  private Mono<ClientWriteResponse> ignoreExistingTupleError(Throwable throwable) {
+    if (!ignorable(throwable, "tuple to be written already existed")) {
+      return Mono.error(throwable);
+    }
+    log.debug("Skipped writing tuple that already exists: {}", throwable.getMessage());
+    return Mono.empty();
+  }
+
+  private Mono<ClientWriteResponse> ignoreMissingTupleError(Throwable throwable) {
+    if (!ignorable(throwable, "tuple to be deleted did not exist")) {
+      return Mono.error(throwable);
+    }
+    log.debug("Skipped deleting tuple that does not exist: {}", throwable.getMessage());
+    return Mono.empty();
+  }
+
+  private boolean ignorable(Throwable throwable, String messagePart) {
+    Throwable current = throwable;
+    while (current != null) {
+      if (current instanceof FgaApiValidationError && current.getMessage().contains(messagePart)) {
+        return true;
+      }
+      current = current.getCause();
+    }
+    return false;
   }
 
   private ClientTupleKey writeKey(String user, String relation, String object) {

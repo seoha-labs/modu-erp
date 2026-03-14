@@ -2,9 +2,9 @@ package com.seohalabs.moduerp.organization.role.application;
 
 import com.seohalabs.moduerp.organization.role.domain.RoleEntity;
 import com.seohalabs.moduerp.organization.role.domain.RoleFactory;
+import com.seohalabs.moduerp.organization.role.infrastructure.persistence.RoleRepository;
 import com.seohalabs.moduerp.organization.shared.infrastructure.keycloak.KeycloakRoleClient;
 import com.seohalabs.moduerp.organization.shared.infrastructure.openfga.OpenFgaTupleService;
-import com.seohalabs.moduerp.organization.role.infrastructure.persistence.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,14 +22,11 @@ public class CreateRoleService {
 
   public Mono<Long> handle(CreateRoleCommand command) {
     RoleEntity role = RoleFactory.create(command.name(), command.description());
-    return syncToKeycloak(role)
-        .then(roleRepository.save(role))
-        .flatMap(this::registerInFga);
+    return syncToKeycloak(role).then(roleRepository.save(role)).flatMap(this::registerInFga);
   }
 
   private Mono<Void> syncToKeycloak(RoleEntity role) {
-    return Mono.fromRunnable(
-            () -> keycloakRoleClient.create(role.getName(), role.getDescription()))
+    return Mono.fromRunnable(() -> keycloakRoleClient.create(role.getName(), role.getDescription()))
         .subscribeOn(Schedulers.boundedElastic())
         .then();
   }

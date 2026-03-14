@@ -15,8 +15,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PositionEntity {
 
-  @Id
-  private Long id;
+  @Id private Long id;
 
   private String name;
   private int level;

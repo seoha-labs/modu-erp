@@ -2,8 +2,8 @@ package com.seohalabs.moduerp.organization.department.application;
 
 import com.seohalabs.moduerp.organization.department.domain.DepartmentEntity;
 import com.seohalabs.moduerp.organization.department.domain.DepartmentFactory;
-import com.seohalabs.moduerp.organization.shared.infrastructure.openfga.OpenFgaTupleService;
 import com.seohalabs.moduerp.organization.department.infrastructure.persistence.DepartmentRepository;
+import com.seohalabs.moduerp.organization.shared.infrastructure.openfga.OpenFgaTupleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

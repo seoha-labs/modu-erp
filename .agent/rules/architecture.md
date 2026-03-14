@@ -1,49 +1,95 @@
 # Architecture
 
-## Module Structure & Dependencies
+## Directory Layout
 
 ```
-Incoming Request → gateway (8080) → erp-hr (8081)
-                                       → vacation (8082) → [OpenFeign] → erp-hr
-                                       → db-manager (8083)
-                                       → kerberos (8084)
+modu-erp/
+├── apps/
+│   ├── gateway/       (port 8080)
+│   ├── organization/  (port 8081)
+│   ├── vacation/      (port 8082)
+│   ├── db-manager/    (port 8083)
+│   └── kerberos/      (port 8084)
+└── shared/
+    └── security/      (library)
+```
+
+Gradle module names (settings.gradle):
+- `:security` → `shared/security`
+- `:gateway` → `apps/gateway`
+- `:organization` → `apps/organization`
+- `:vacation` → `apps/vacation`
+- `:db-manager` → `apps/db-manager`
+- `:kerberos` → `apps/kerberos`
+
+## Module Responsibilities
+
+```
+Incoming Request → gateway (8080) → organization (8081)
+                                   → vacation (8082) → [OpenFeign] → organization
+                                   → db-manager (8083)
+                                   → kerberos (8084)
 
 All service modules → security (shared library)
 ```
 
 - **`security`**: Pure library — no Spring Boot plugin applied. Provides shared Spring Security and OAuth2 Resource Server configuration. Dependencies declared with `api()` are transitively exposed to all modules.
 - **`gateway`**: Spring Cloud Gateway (WebFlux-based). Validates Keycloak JWT tokens and routes to downstream services. Must remain WebFlux-only — do not mix with Servlet stack.
-- **`erp-hr`**: Master data for employees, organization structure, and approval lines. Core module referenced by other services.
-- **`vacation`**: Handles vacation requests and drafts. Calls `erp-hr` via OpenFeign to resolve organization and approval line data.
+- **`organization`**: Master data for employees, departments, positions, roles, and approval lines. Core module referenced by other services.
+- **`vacation`**: Handles vacation requests and drafts. Calls `organization` via OpenFeign to resolve organization and approval line data.
 - **`db-manager`**: Database configuration management.
 - **`kerberos`**: Company server information lookup.
 
 ## DDD Package Structure
 
-Each service module follows Domain-Driven Design. The base package is `com.seohalabs.moduerp.{module}`.
+Each service module is organized **domain-first**. The base package is `com.seohalabs.moduerp.{module}`.
 
 ```
 com.seohalabs.moduerp.{module}/
-├── domain/
-│   ├── model/           # Aggregates, Entities, Value Objects
-│   ├── repository/      # Repository interfaces (domain layer, no JPA)
-│   └── service/         # Domain Services
-├── application/
-│   ├── command/         # Command handlers (write side)
-│   └── query/           # Query handlers (read side)
-├── infrastructure/
-│   ├── persistence/     # JPA entities, QueryDSL repository implementations
-│   └── client/          # Feign clients, external integrations
-└── presentation/
-    ├── rest/            # REST controllers
-    └── dto/             # Request / Response DTOs
+├── {domain}/                        # e.g. employee, department, role, position
+│   ├── domain/
+│   │   ├── {Domain}Entity.java      # JPA entity + domain model in one class
+│   │   ├── {Domain}Factory.java     # Factory for creating domain objects
+│   │   ├── {Domain}Policy.java      # Domain rules / invariants (if needed)
+│   │   └── {Domain}StatusType.java  # Enums with Type suffix
+│   ├── application/
+│   │   ├── {Domain}UseCase.java     # Facade — composes Services, entry point for Controller/gRPC
+│   │   ├── {Action}Service.java     # Single-operation service (@Service), holds infra repos
+│   │   ├── {Action}Command.java     # Write-side input DTO
+│   │   ├── {Find}Query.java         # Read-side input DTO
+│   │   ├── {Domain}Result.java      # Output DTO
+│   │   └── {Domain}DomainMapper.java
+│   ├── infrastructure/
+│   │   └── persistence/
+│   │       ├── {Domain}Repository.java       # extends JpaRepository
+│   │       └── {Domain}QueryRepository.java  # QueryDSL (if needed)
+│   └── presentation/
+│       ├── {Domain}Controller.java
+│       ├── {Domain}Mapper.java
+│       ├── {Action}Request.java     # one file per operation
+│       └── {Domain}Response.java    # one file per operation
+└── shared/                          # Cross-domain infrastructure (keycloak, openfga, security, bootstrap)
+    ├── infrastructure/
+    │   ├── bootstrap/
+    │   ├── keycloak/
+    │   ├── openfga/
+    │   └── security/
+    └── mapping/
 ```
 
-**Dependency direction**: `presentation` → `application` → `domain` ← `infrastructure`
+**Layer roles:**
 
-- The `domain` layer must have zero dependency on Spring, JPA, or any framework.
-- `infrastructure` implements interfaces defined in `domain.repository`.
-- `application` orchestrates domain logic and coordinates infrastructure via domain interfaces.
+- **domain** — JPA entity + domain model in one class (`@Entity` + domain logic together). State transition methods, value objects, enums (`Type` suffix), domain policy. Only `@Entity`/`@Table`/`@Column` JPA annotations allowed here.
+- **domain** — JPA entity + domain model in one class (`@Entity` + domain logic together). State transition methods, value objects, enums (`Type` suffix), domain policy. Only `@Entity`/`@Table`/`@Column` JPA annotations allowed here.
+- **application** — Two-level structure:
+  - `{Domain}UseCase` — facade that composes related `Service` instances. This is what `Controller`/gRPC callers depend on. No business logic of its own.
+  - `{Action}Service` — single-operation `@Service`. Owns the transaction boundary. Directly imports Spring Data JPA repository interfaces from `infrastructure.persistence`. No domain repository interfaces — no indirection layer.
+- **infrastructure** — Spring Data JPA interfaces (`extends JpaRepository`), QueryDSL implementations, Keycloak/OpenFGA adapters.
+- **presentation** — Controllers and gRPC handlers depend on `{Domain}UseCase`, never on individual `Service` classes. MapStruct mappers, per-operation request/response DTOs. No business logic.
+
+**Dependency direction**: `presentation` → `application(UseCase)` → `application(Service)` → `infrastructure` + `domain`
+
+**Cross-domain references**: A domain class may directly reference another domain's types (e.g. `employee/domain` imports `department/domain`). Keep references unidirectional — no circular domain dependencies.
 
 ## Dependency Version Management
 
@@ -66,8 +112,8 @@ com.seohalabs.moduerp.{module}/
 
 ## Inter-Service Communication
 
-- Gradle project dependencies (`implementation project(':...')`) are only allowed pointing to `security`. Service-to-service calls must go over HTTP.
-- `vacation` → `erp-hr` via OpenFeign (`@EnableFeignClients` is already applied on `VacationApplication`).
+- Gradle project dependencies (`implementation project(':...')`) are only allowed pointing to `:security`. Service-to-service calls must go over HTTP.
+- `vacation` → `organization` via OpenFeign (`@EnableFeignClients` is already applied on `VacationApplication`).
 
 ## Environment Variables
 

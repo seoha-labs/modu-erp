@@ -1,11 +1,11 @@
 package com.seohalabs.moduerp.organization.employee.application;
 
 import com.seohalabs.moduerp.organization.employee.domain.EmployeeEntity;
+import com.seohalabs.moduerp.organization.employee.infrastructure.persistence.EmployeeRepository;
 import com.seohalabs.moduerp.organization.role.domain.RoleEntity;
+import com.seohalabs.moduerp.organization.role.infrastructure.persistence.RoleRepository;
 import com.seohalabs.moduerp.organization.shared.infrastructure.keycloak.KeycloakAccountClient;
 import com.seohalabs.moduerp.organization.shared.infrastructure.openfga.OpenFgaTupleService;
-import com.seohalabs.moduerp.organization.employee.infrastructure.persistence.EmployeeRepository;
-import com.seohalabs.moduerp.organization.role.infrastructure.persistence.RoleRepository;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;

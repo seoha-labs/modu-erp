@@ -7,4 +7,6 @@ import reactor.core.publisher.Mono;
 public interface EmployeeRepository extends ReactiveCrudRepository<EmployeeEntity, Long> {
 
   Mono<Boolean> existsByKeycloakId(String keycloakId);
+
+  Mono<EmployeeEntity> findByKeycloakId(String keycloakId);
 }

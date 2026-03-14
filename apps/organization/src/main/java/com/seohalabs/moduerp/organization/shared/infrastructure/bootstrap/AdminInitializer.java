@@ -2,10 +2,10 @@ package com.seohalabs.moduerp.organization.shared.infrastructure.bootstrap;
 
 import com.seohalabs.moduerp.organization.employee.domain.EmployeeEntity;
 import com.seohalabs.moduerp.organization.employee.domain.EmployeeFactory;
-import com.seohalabs.moduerp.organization.shared.infrastructure.keycloak.KeycloakAccountClient;
-import com.seohalabs.moduerp.organization.shared.infrastructure.openfga.OpenFgaTupleService;
 import com.seohalabs.moduerp.organization.employee.infrastructure.persistence.EmployeeRepository;
 import com.seohalabs.moduerp.organization.role.infrastructure.persistence.RoleRepository;
+import com.seohalabs.moduerp.organization.shared.infrastructure.keycloak.KeycloakAccountClient;
+import com.seohalabs.moduerp.organization.shared.infrastructure.openfga.OpenFgaTupleService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,11 +41,18 @@ public class AdminInitializer implements ApplicationRunner {
 
   private void ensureAdmin() {
     String keycloakId = resolveKeycloakId();
-    Boolean exists = employeeRepository.existsByKeycloakId(keycloakId).block();
-    if (Boolean.TRUE.equals(exists)) {
+    EmployeeEntity existing = employeeRepository.findByKeycloakId(keycloakId).block();
+    if (existing != null) {
+      recoverFgaTuples(keycloakId, existing.getId());
       return;
     }
     createAdminEmployee(keycloakId);
+  }
+
+  private void recoverFgaTuples(String keycloakId, Long employeeId) {
+    tupleService
+        .writeEmployeeRegistration(keycloakId, employeeId, Set.of(DefaultRoleInitializer.ADMIN))
+        .block();
   }
 
   private String resolveKeycloakId() {
@@ -65,23 +72,27 @@ public class AdminInitializer implements ApplicationRunner {
     Long adminRoleId = fetchAdminRoleId();
     EmployeeEntity admin = buildAdminEmployee(keycloakId, adminRoleId);
     EmployeeEntity saved = employeeRepository.save(admin).block();
-    tupleService.writeEmployeeRegistration(
-        keycloakId, saved.getId(), Set.of(DefaultRoleInitializer.ADMIN)).block();
+    tupleService
+        .writeEmployeeRegistration(keycloakId, saved.getId(), Set.of(DefaultRoleInitializer.ADMIN))
+        .block();
   }
 
   private Long fetchAdminRoleId() {
-    return roleRepository.findByName(DefaultRoleInitializer.ADMIN)
+    return roleRepository
+        .findByName(DefaultRoleInitializer.ADMIN)
         .blockOptional()
         .orElseThrow(() -> new IllegalStateException("ADMIN role not found"))
         .getId();
   }
 
   private EmployeeEntity buildAdminEmployee(String keycloakId, Long adminRoleId) {
-    EmployeeEntity admin = EmployeeFactory.create(
-        adminProperties.username(),
-        adminProperties.username() + "@modu-erp.local",
-        null, null,
-        new Long[]{adminRoleId});
+    EmployeeEntity admin =
+        EmployeeFactory.create(
+            adminProperties.username(),
+            adminProperties.username() + "@modu-erp.local",
+            null,
+            null,
+            new Long[] {adminRoleId});
     admin.assignKeycloakId(keycloakId);
     return admin;
   }

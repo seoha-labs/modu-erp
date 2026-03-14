@@ -2,8 +2,8 @@ package com.seohalabs.moduerp.organization.position.application;
 
 import com.seohalabs.moduerp.organization.position.domain.PositionEntity;
 import com.seohalabs.moduerp.organization.position.domain.PositionFactory;
-import com.seohalabs.moduerp.organization.shared.infrastructure.openfga.OpenFgaTupleService;
 import com.seohalabs.moduerp.organization.position.infrastructure.persistence.PositionRepository;
+import com.seohalabs.moduerp.organization.shared.infrastructure.openfga.OpenFgaTupleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

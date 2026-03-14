@@ -1,8 +1,8 @@
 package com.seohalabs.moduerp.organization.shared.infrastructure.bootstrap;
 
 import com.seohalabs.moduerp.organization.role.domain.RoleFactory;
-import com.seohalabs.moduerp.organization.shared.infrastructure.keycloak.KeycloakRoleClient;
 import com.seohalabs.moduerp.organization.role.infrastructure.persistence.RoleRepository;
+import com.seohalabs.moduerp.organization.shared.infrastructure.keycloak.KeycloakRoleClient;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
@@ -31,6 +31,7 @@ public class DefaultRoleInitializer implements ApplicationRunner {
   private void createIfAbsent(String roleName) {
     Boolean exists = roleRepository.existsByName(roleName).block();
     if (Boolean.TRUE.equals(exists)) {
+      ensureKeycloakRole(roleName);
       return;
     }
     createRole(roleName);

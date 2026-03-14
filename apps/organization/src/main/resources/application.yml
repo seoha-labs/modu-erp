@@ -1,10 +1,15 @@
 spring:
   application:
     name: organization
+  main:
+    allow-bean-definition-overriding: true
   r2dbc:
     url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/erp_organization
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
+  sql:
+    init:
+      mode: always
   security:
     oauth2:
       resourceserver:

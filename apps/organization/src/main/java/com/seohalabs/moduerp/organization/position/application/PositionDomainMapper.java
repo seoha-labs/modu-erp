@@ -1,7 +1,7 @@
 package com.seohalabs.moduerp.organization.position.application;
 
-import com.seohalabs.moduerp.organization.shared.mapping.OrganizationMapperConfig;
 import com.seohalabs.moduerp.organization.position.domain.PositionEntity;
+import com.seohalabs.moduerp.organization.shared.mapping.OrganizationMapperConfig;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

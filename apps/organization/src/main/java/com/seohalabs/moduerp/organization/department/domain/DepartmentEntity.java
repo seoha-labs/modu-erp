@@ -16,8 +16,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DepartmentEntity {
 
-  @Id
-  private Long id;
+  @Id private Long id;
 
   private String name;
   private Long parentId;

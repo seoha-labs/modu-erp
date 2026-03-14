@@ -15,8 +15,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RoleEntity {
 
-  @Id
-  private Long id;
+  @Id private Long id;
 
   private String name;
   private String description;

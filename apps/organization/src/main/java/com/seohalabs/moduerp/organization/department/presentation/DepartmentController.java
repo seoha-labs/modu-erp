@@ -26,7 +26,9 @@ public class DepartmentController {
   @PreAuthorize("hasPermission('erp', 'System', 'can_create_department')")
   @PostMapping
   public Mono<ResponseEntity<Long>> create(@RequestBody CreateDepartmentRequest request) {
-    return createService.handle(DepartmentMapper.INSTANCE.toCommand(request)).map(ResponseEntity::ok);
+    return createService
+        .handle(DepartmentMapper.INSTANCE.toCommand(request))
+        .map(ResponseEntity::ok);
   }
 
   @PreAuthorize("hasPermission('erp', 'System', 'can_list_department')")

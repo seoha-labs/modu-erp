@@ -4,6 +4,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
@@ -20,11 +21,30 @@ public class KeycloakAccountClient {
   private final Keycloak keycloak;
   private final KeycloakProperties properties;
 
-  public String create(String email, String name, Set<String> roleNames) {
+  public CreatedKeycloakAccount createEmployee(String email, String name, Set<String> roleNames) {
+    String userId = create(email, name, roleNames);
+    String password = generateTemporaryPassword();
+    setTemporaryPassword(userId, password);
+    return new CreatedKeycloakAccount(userId, password);
+  }
+
+  private String create(String email, String name, Set<String> roleNames) {
     Response response = realm().users().create(buildEmailUser(email, name));
     String userId = CreatedResponseUtil.getCreatedId(response);
     assignRoles(userId, roleNames);
     return userId;
+  }
+
+  private void setTemporaryPassword(String userId, String password) {
+    CredentialRepresentation credential = new CredentialRepresentation();
+    credential.setType(CredentialRepresentation.PASSWORD);
+    credential.setValue(password);
+    credential.setTemporary(true);
+    realm().users().get(userId).resetPassword(credential);
+  }
+
+  private String generateTemporaryPassword() {
+    return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
   }
 
   public String createWithUsername(String username, String password, Set<String> roleNames) {
@@ -63,6 +83,7 @@ public class KeycloakAccountClient {
     user.setEmail(email);
     user.setUsername(email);
     user.setFirstName(name);
+    user.setLastName(name);
     user.setEnabled(true);
     return user;
   }
@@ -70,6 +91,9 @@ public class KeycloakAccountClient {
   private UserRepresentation buildUsernameUser(String username) {
     UserRepresentation user = new UserRepresentation();
     user.setUsername(username);
+    user.setEmail(username + "@modu-erp.local");
+    user.setFirstName(username);
+    user.setLastName(username);
     user.setEnabled(true);
     return user;
   }

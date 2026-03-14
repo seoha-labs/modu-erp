@@ -14,13 +14,45 @@ Unit tests are the default. Write integration and E2E tests only where unit test
 ## Naming Convention
 
 ```java
-@DisplayName("Given valid vacation request, when submitted, then returns 201 with location header")
+@DisplayName("Approved vacation cannot be cancelled by the employee")
 @Test
-void givenValidRequest_whenSubmit_thenReturns201WithLocation() { ... }
+void givenApprovedVacation_whenEmployeeCancels_thenRejected() { ... }
 ```
 
 - Method name: `given{Context}_when{Action}_then{Outcome}` — use camelCase within each segment.
-- `@DisplayName`: Full English sentence. Starts with "Given", reads naturally.
+- `@DisplayName`: A natural English sentence using **ubiquitous language**. No fixed structure required — write whatever reads most clearly to a domain expert.
+
+### DDD-Style DisplayName
+
+`@DisplayName` must express **domain behavior**, not technical implementation details. A domain expert who does not know the code should be able to read it and understand the business rule being tested.
+
+```java
+// Bad — exposes implementation details
+@DisplayName("Given entity status is APPROVED, when cancel() is called, then throws IllegalStateException")
+
+// Good — expresses a domain rule
+@DisplayName("Approved vacation cannot be cancelled by the employee")
+@DisplayName("An employee may not submit overlapping vacation requests")
+@DisplayName("Only an hr manager can grant hr manager permission to another employee")
+```
+
+Rules:
+- Use domain terms: aggregate names, domain events, business rules, roles (e.g., "employee", "hr manager", "vacation request")
+- Avoid: method names, class names, exception class names, HTTP status codes
+- No mandatory Given/When/Then structure — choose the phrasing that best expresses the rule
+- `@Nested` `@DisplayName` describes the **domain scenario**, not the method name
+
+```java
+// Bad
+@Nested
+@DisplayName("submit()")
+class Submit { ... }
+
+// Good
+@Nested
+@DisplayName("Vacation request submission")
+class Submit { ... }
+```
 
 ## Test Structure
 
